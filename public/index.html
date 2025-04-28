@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ALBUM</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      color: #00f;
+      font-family: monospace;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    #ascii-background {
+      white-space: pre;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      color: #0044ff;
+      opacity: 0.07;
+      font-size: 6px;
+      z-index: -1;
+      overflow: hidden;
+      line-height: 7px;
+    }
+
+    .header {
+      text-align: center;
+      white-space: pre;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #00f;
+      z-index: 2;
+      position: relative;
+    }
+
+    .form-container {
+      text-align: center;
+      margin: 30px 0;
+      z-index: 2;
+      position: relative;
+    }
+
+    input[type="text"], input[type="file"] {
+      margin: 10px;
+      padding: 8px;
+      background: black;
+      border: 1px solid #00f;
+      color: #00f;
+      transition: box-shadow 0.3s ease;
+    }
+
+    input[type="text"]:hover, input[type="file"]:hover {
+      box-shadow: 0 0 15px 3px rgba(0, 0, 255, 0.8);
+    }
+
+    button {
+      padding: 10px 20px;
+      background: black;
+      border: 1px solid #00f;
+      color: #00f;
+      cursor: pointer;
+      transition: box-shadow 0.3s ease;
+    }
+
+    button:hover {
+      box-shadow: 0 0 15px 3px rgba(0, 0, 255, 0.8);
+    }
+
+    #album {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-evenly;
+      gap: 20px;
+      padding: 20px;
+      z-index: 2;
+      position: relative;
+      flex-direction: row;
+      align-items: flex-start;
+    }
+
+    .photo {
+      text-align: center;
+      position: relative;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      width: 300px;
+      margin-bottom: 20px;
+    }
+
+    .photo img {
+      max-width: 100%;
+      border: 1px solid #00f;
+      transition: transform 0.3s ease;
+      box-shadow: 0 0 20px 10px rgba(0, 0, 255, 0.8); /* Яркое свечение всегда */
+    }
+
+    .photo:hover {
+      transform: translateY(-10px);
+    }
+
+    /* Постоянное яркое свечение для имен */
+    .sender {
+      margin-top: 5px;
+      font-size: 16px;
+      color: #00f; /* Синий цвет */
+      text-shadow: 0 0 20px rgba(0, 0, 255, 1), 0 0 30px rgba(0, 0, 255, 0.8), 0 0 45px rgba(0, 0, 255, 1); /* Очень яркое свечение */
+    }
+  </style>
+</head>
+<body>
+
+<div id="ascii-background"></div>
+
+<div class="header">
+    ___    __    ____  __  ____  ___
+   /   |  / /   / __ )/ / / /  |/  /
+  / /| | / /   / __  / / / / /|_/ / 
+ / ___ |/ /___/ /_/ / /_/ / /  / /  
+/_/  |_/_____/_____ /\____/_/  /_/  
+</div>
+
+<div class="form-container">
+  <input type="text" id="sender" placeholder="Your Name">
+  <input type="file" id="imageUpload" accept="image/*">
+  <button onclick="uploadImage()">Add to Album</button>
+</div>
+
+<div id="album"></div>
+
+<script>
+async function uploadImage() {
+  const senderName = document.getElementById('sender').value.trim();
+  const fileInput = document.getElementById('imageUpload');
+  if (fileInput.files.length === 0 || senderName === '') return;
+
+  const formData = new FormData();
+  formData.append('photo', fileInput.files[0]);
+  formData.append('name', senderName);
+
+  const response = await fetch('http://localhost:3000/upload', {
+    method: 'POST',
+    body: formData
+  });
+
+  const data = await response.json();
+
+  // Check if the image URL is received successfully
+  if (data.url) {
+    const div = document.createElement('div');
+    div.className = 'photo';
+    div.innerHTML = `<img src="${data.url}" alt="image"><div class="sender">${senderName}</div>`;
+    
+    // Adding new image to the top of the album
+    const album = document.getElementById('album');
+    album.insertBefore(div, album.firstChild); // Add new image at the top
+  } else {
+    alert('Failed to upload image');
+  }
+
+  fileInput.value = ''; // Clear the input field after upload
+}
+
+// Load previously uploaded images
+async function loadImages() {
+  const response = await fetch('http://localhost:3000/photos');
+  const images = await response.json();
+
+  const uploadedImagesDiv = document.getElementById('album');
+  images.forEach(image => {
+    const div = document.createElement('div');
+    div.className = 'photo';
+    div.innerHTML = `<img src="${image.url}" alt="image"><div class="sender">${image.name}</div>`;
+    uploadedImagesDiv.appendChild(div);
+  });
+}
+
+// Load images on page load
+window.onload = loadImages;
+</script>
+
+</body>
+</html>
