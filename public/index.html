@@ -143,7 +143,7 @@ async function uploadImage() {
   formData.append('photo', fileInput.files[0]);
   formData.append('name', senderName);
 
-  const response = await fetch('http://localhost:3000/upload', {
+  const response = await fetch('/upload', {
     method: 'POST',
     body: formData
   });
@@ -168,7 +168,7 @@ async function uploadImage() {
 
 // Load previously uploaded images
 async function loadImages() {
-  const response = await fetch('http://localhost:3000/photos');
+  const response = await fetch('/photos');
   const images = await response.json();
 
   const uploadedImagesDiv = document.getElementById('album');
